@@ -39,7 +39,8 @@ class Puml(nodes.General, nodes.Element):
     pass
 
 def dbg(string, *args):
-	print '--->%s<--:%s' %(string, args)
+	if self.builder.config.puml_dbg_print is Tru:
+	    print '--->%s<--:%s' %(string, args)
 	
 def get_command(self, node):
     cmd = list(str(self.builder.config.puml_path).split())
@@ -101,6 +102,7 @@ def setup(app):
     app.add_config_value('puml_path', 'plantuml', '')
     app.add_config_value('puml_epstopdf', 'epstopdf', '')
     app.add_config_value('puml_output_format', 'eps', '')
+    app.add_config_value('puml_dbg_print', False, '')
     
     app.add_node(Puml, latex=(visit_latex, depart_latex))
     app.add_directive('puml', PumlDirective)
