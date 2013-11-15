@@ -1,4 +1,4 @@
-import os, subprocess, inspect, uuid
+import os, subprocess, inspect, uuid, re
 
 from docutils import nodes
 from sphinx.util.compat import Directive
@@ -15,7 +15,6 @@ class PumlDirective(Directive):
         'align' : directives.unchanged }
 	
     def run(self):
-        print
     	node = Puml()
     	node['puml'] = self.content
     	node['caption'] = self.content[0]
@@ -29,18 +28,13 @@ class PumlDirective(Directive):
     	cl.pop(0)
     	node['content'] = cl
 
-    	dbg(inspect.getmembers(self))
-    	for n in inspect.getmembers(self):
-    	   dbg('Insp',n)
-    	   
         return [node]
         
 class Puml(nodes.General, nodes.Element):
     pass
 
 def dbg(string, *args):
-	if self.builder.config.puml_dbg_print is Tru:
-	    print '--->%s<--:%s' %(string, args)
+	print '--->%s<--:%s' %(string, args)
 	
 def get_command(self, node):
     cmd = list(str(self.builder.config.puml_path).split())
@@ -75,19 +69,19 @@ __ALIGNMENT__ = {'right': ('\\begin{flushright}', '\\end{flushright}'),
 
 def visit_latex(self, node):
     fname = do_image(self, node)
-    dbg(fname)
     graphOpts = str('')
     if node['width'] is not None:
         graphOpts += 'width=%s,' %(node['width'])
     if node['height'] is not None:
         graphOpts += 'height=%s,' %(node['height'])
     if node['scale'] is not None:
-        graphOpts += 'scale=%s,' %(node['scale'])
-    dbg('options', graphOpts)
-    dbg(str(node['align']) in __ALIGNMENT__)
+        percent = re.match('([0-9]*) *%', node['scale'])
+        if percent:
+            graphOpts += 'scale=%.3f,' %(float(percent.group(1))/100)
+        else:
+            graphOpts += 'scale=%s,' %(node['scale'])
     if (node['align'] in __ALIGNMENT__) is False:
         node['align'] = None
-        dbg('Align changed')
     self.body.append('\n\\begin{figure}[H]\n%s\\capstart\n' % (__ALIGNMENT__.get(node['align'])[0]))
     self.body.append('\n\\includegraphics[%s]{%s}\n' % (graphOpts, self.encode(fname)))
     self.body.append('\n\\caption{%s}%s\\end{figure}\n' % (node['caption'], __ALIGNMENT__.get(node['align'])[1]));
@@ -102,7 +96,6 @@ def setup(app):
     app.add_config_value('puml_path', 'plantuml', '')
     app.add_config_value('puml_epstopdf', 'epstopdf', '')
     app.add_config_value('puml_output_format', 'eps', '')
-    app.add_config_value('puml_dbg_print', False, '')
-    
+
     app.add_node(Puml, latex=(visit_latex, depart_latex))
     app.add_directive('puml', PumlDirective)
