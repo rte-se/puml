@@ -23,6 +23,8 @@ class PumlDirective(Directive):
     	node['width'] = self.options.get('width', None)
     	node['scale'] = self.options.get('scale', None)
     	node['align'] = self.options.get('align', None)
+        node['source'] = self.state_machine.input_lines.source(self.lineno - self.state_machine.input_offset - 1);
+        node['file'] = os.path.abspath(os.path.join(os.path.dirname(node['source']),node['file']))
     	
     	cl = self.content
     	cl.pop(0)
